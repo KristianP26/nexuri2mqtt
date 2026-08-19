@@ -11,6 +11,30 @@ on the next discovery pass.
 > observing the official web app's own network traffic. It can break whenever the
 > vendor changes something. Not affiliated with or endorsed by Nexuri.
 
+## Why this exists
+
+A Nexuri flat is already fully metered. Electricity, hot and cold water, indoor
+temperature, humidity and CO2, boiler and ventilation state — all of it is measured
+by hardware you pay for through the rent, and all of it is visible in the vendor's
+web dashboard.
+
+What you cannot do is *use* it. There is no integration for Home Assistant or
+anything else, no export, and the dashboard is a live view: it tells you the CO2 is
+1400 ppm right now, but not what it was at 3 a.m. last Tuesday. Any long-term
+question — did the new ventilation setpoint actually help, what does the boiler cost
+per month, is the flat drifting warmer — has no answer, because nothing keeps the
+history. The one place all this data can meet the rest of your home is a broker, and
+getting it there was a browser tab you had to leave open.
+
+So this bridge does the boring part: log in, discover what the account can see, poll
+it on a sane interval, publish it as MQTT with Home Assistant discovery. From there
+the data is ordinary — energy meters land in the Energy dashboard, CO2 can drive a
+ventilation automation, and everything gets recorded like any other sensor.
+
+It is written to be flat-agnostic on purpose. Discovery keys off device *types*, not
+the IDs in one particular apartment, so a neighbour with the same hardware runs the
+same container with their own credentials and nothing else to configure.
+
 ## Status
 
 **Read-only.** This release polls sensors and publishes them. It never sends a
