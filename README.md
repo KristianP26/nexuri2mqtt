@@ -3,9 +3,9 @@
 Bridge between the **Nexuri** smart-flat system (`app.nexuri.cz`) and **MQTT**,
 with Home Assistant auto-discovery.
 
-Point it at your Nexuri account and it finds your devices by itself. No device
-IDs to look up, no YAML per sensor. New device added to your flat? It shows up
-on the next discovery pass.
+Point it at your Nexuri account and it finds the devices itself. No IDs to look
+up, no YAML per sensor. A device added to your flat shows up on the next
+discovery pass.
 
 > **Unofficial.** Nexuri publishes no API documentation. This client was built by
 > observing the official web app's own network traffic. It can break whenever the
@@ -47,15 +47,13 @@ and nothing else to configure.
 
 ## Status
 
-**Read-only.** This release polls sensors and publishes them. It never sends a
-command. Writing to a building-management system moves real hardware — blinds,
-boilers, ventilation — so control is deliberately deferred until the read path
-has proven itself.
+**Read-only.** This release polls sensors and publishes them, and never sends a
+command. Writing to a building-management system moves real hardware: blinds,
+boilers, ventilation. Control waits until the read path has proven itself.
 
 ## How discovery works
 
-Most integrations for undocumented APIs make you paste device IDs out of your
-browser's DevTools. This one doesn't:
+On start, and again every `DISCOVERY_INTERVAL`:
 
 1. `PUT /login` with your portal credentials -> auth token
 2. `PUT /component_widget/get_list` -> every widget your account can see,
@@ -66,15 +64,15 @@ browser's DevTools. This one doesn't:
 4. `PUT /measured_data/get_last` per device -> current values
 5. MQTT discovery config published once per entity, then state updates on a loop
 
-Because step 3 keys off `type` and not off your flat's IDs, a different flat with
-the same kinds of devices works with no configuration at all.
+Step 3 keys off `type`, not off your flat's IDs, so a different flat with the same
+kinds of devices needs no configuration.
 
 ### Self-healing topic probing
 
-If a device rejects a topic, the API answers `state: "error"`, `rc: -1` and puts
-the offending topic name in `rsn` — with **HTTP 200**. The bridge uses that: it
-drops the topic named in `rsn`, retries, and caches the working topic set per
-component so the probe runs once, not every poll.
+If a device rejects a topic, the API answers `state: "error"`, `rc: -1` and names
+the offending topic in `rsn`, all under **HTTP 200**. The bridge drops that topic,
+retries, and caches the working topic set per component, so the probe runs once
+rather than every poll.
 
 ## Supported device types
 
@@ -93,8 +91,8 @@ Discovered automatically. Types with a curated topic map:
 | `SWITCH` | Switch / direct heater | on/off |
 | `DOOR`, `TENANT_DOOR`, `MAIN_DOOR`, `SPECIAL_DOOR`, `GARAGE` | Doors | open/closed |
 
-Anything else is still discovered — its topics are read if the API advertises
-them, and published as raw diagnostic entities.
+Anything else is still discovered. Its topics are read if the API advertises them,
+and published as raw diagnostic entities.
 
 ## Install
 
@@ -109,12 +107,12 @@ docker compose logs -f
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `NEXURI_EMAIL` | — | Portal login (required) |
-| `NEXURI_PASSWORD` | — | Portal password (required) |
+| `NEXURI_EMAIL` | (none) | Portal login, required |
+| `NEXURI_PASSWORD` | (none) | Portal password, required |
 | `NEXURI_BASE_URL` | `https://backend.nexuri.cz` | API base |
-| `MQTT_HOST` | — | Broker host (required) |
+| `MQTT_HOST` | (none) | Broker host, required |
 | `MQTT_PORT` | `1883` | Broker port |
-| `MQTT_USERNAME` / `MQTT_PASSWORD` | — | Broker auth, if any |
+| `MQTT_USERNAME` / `MQTT_PASSWORD` | (none) | Broker auth, if any |
 | `MQTT_PREFIX` | `nexuri` | State topic prefix |
 | `MQTT_DISCOVERY_PREFIX` | `homeassistant` | HA discovery prefix |
 | `POLL_INTERVAL` | `60` | Seconds between polls |
@@ -124,19 +122,16 @@ docker compose logs -f
 
 ### Shared building devices
 
-A tenant account usually sees communal hardware too — main entrance, garage,
-lifts, bike racks. Those are **not your flat**. They are excluded by default;
-set `INCLUDE_SHARED=true` if you want them as read-only sensors.
+A tenant account usually sees communal hardware too: main entrance, garage, lifts,
+bike racks. Those are **not your flat**, so they are excluded by default. Set
+`INCLUDE_SHARED=true` to publish them as read-only sensors.
 
-## Polling and being a good citizen
+## Polling
 
-The vendor's own web dashboard polls every few seconds. The default here is 60
-seconds, so the bridge is considerably lighter than simply leaving the official
-app open in a tab.
-
-Each read reaches the hardware controller in your flat, so the bridge never
-brute-forces topic names — it probes only what the API advertised, once, then
-caches.
+Every read reaches the hardware controller in your flat, so the bridge probes only
+what the API advertised, once, then caches it. It never brute-forces topic names.
+At the default 60 seconds it is lighter traffic than the vendor's own dashboard,
+which polls every few seconds while the tab is open.
 
 ## MQTT topics
 
@@ -146,8 +141,8 @@ nexuri/bridge/availability         online | offline (LWT)
 homeassistant/<platform>/<uid>/config    retained discovery
 ```
 
-Entities go `unavailable` when the bridge loses the API, rather than showing a
-stale reading forever. That distinction matters if you automate on this data.
+Entities go `unavailable` when the bridge loses the API, instead of showing a stale
+reading forever.
 
 ## Known vendor quirks
 
