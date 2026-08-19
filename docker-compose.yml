@@ -1,0 +1,13 @@
+services:
+  nexuri2mqtt:
+    build: .
+    image: nexuri2mqtt:latest
+    container_name: nexuri2mqtt
+    env_file: .env
+    restart: unless-stopped
+    networks:
+      - nexuri2mqtt
+
+networks:
+  nexuri2mqtt:
+    driver: bridge
