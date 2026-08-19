@@ -18,22 +18,35 @@ temperature, humidity and CO2, boiler and ventilation state — all of it is mea
 by hardware you pay for through the rent, and all of it is visible in the vendor's
 web dashboard.
 
-What you cannot do is *use* it. There is no integration for Home Assistant or
-anything else, no export, and the dashboard is a live view: it tells you the CO2 is
-1400 ppm right now, but not what it was at 3 a.m. last Tuesday. Any long-term
-question — did the new ventilation setpoint actually help, what does the boiler cost
-per month, is the flat drifting warmer — has no answer, because nothing keeps the
-history. The one place all this data can meet the rest of your home is a broker, and
-getting it there was a browser tab you had to leave open.
+What you cannot do is *use* it. The app shows values and lets you nudge a setpoint by
+hand — that is the whole feature set. There are no automations, no schedules, no
+conditions, no export, and no integration with anything else. Even the one control
+that looks automatic isn't: the ventilation switch labelled "Automatika" turns the
+unit off rather than handing it to any automatic mode. If you want the flat to react
+to its own measurements, you are the automation, and you have to be holding a phone.
+
+There is no history either. The dashboard is a live view: it tells you CO2 is 1400 ppm
+right now, but not what it was at 3 a.m. last Tuesday. Every long-term question — did
+raising the ventilation setpoint actually help, what does the boiler cost per month,
+is the flat drifting warmer — is unanswerable, because nothing keeps the record.
 
 So this bridge does the boring part: log in, discover what the account can see, poll
-it on a sane interval, publish it as MQTT with Home Assistant discovery. From there
-the data is ordinary — energy meters land in the Energy dashboard, CO2 can drive a
-ventilation automation, and everything gets recorded like any other sensor.
+it on a sane interval, publish it as MQTT with Home Assistant discovery. Past that
+point the data is ordinary. It gets recorded like any other sensor, energy meters land
+in the Energy dashboard, and CO2 or boiler state can trigger automations the vendor
+never offered — including ones that act on hardware Nexuri knows nothing about.
 
-It is written to be flat-agnostic on purpose. Discovery keys off device *types*, not
-the IDs in one particular apartment, so a neighbour with the same hardware runs the
-same container with their own credentials and nothing else to configure.
+Mixing sources is the real payoff. In my flat three BLE thermometers already report
+per-room temperature to the same Home Assistant; Nexuri contributes one environmental
+sensor, CO2, and the boiler and ventilation state. Separately each half is a partial
+picture. On one broker they are a single system, and a decision can finally use all of
+it at once — vent on CO2 while watching what it does to the coldest room, rather than
+trusting a number from a dashboard that only speaks for the hallway.
+
+The bridge is written to be flat-agnostic on purpose. Discovery keys off device
+*types*, not the IDs in one particular apartment, so a neighbour with the same
+hardware runs the same container with their own credentials and nothing else to
+configure.
 
 ## Status
 
