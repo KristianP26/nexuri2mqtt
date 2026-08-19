@@ -14,39 +14,36 @@ on the next discovery pass.
 ## Why this exists
 
 A Nexuri flat is already fully metered. Electricity, hot and cold water, indoor
-temperature, humidity and CO2, boiler and ventilation state — all of it is measured
-by hardware you pay for through the rent, and all of it is visible in the vendor's
-web dashboard.
+temperature, humidity and CO2, boiler and ventilation state: all of it is measured by
+hardware you pay for through the rent, and all of it is visible in the vendor's web
+dashboard.
 
-What you cannot do is *use* it. The app shows values and lets you nudge a setpoint by
-hand — that is the whole feature set. There are no automations, no schedules, no
-conditions, no export, and no integration with anything else. Even the one control
-that looks automatic isn't: the ventilation switch labelled "Automatika" turns the
-unit off rather than handing it to any automatic mode. If you want the flat to react
-to its own measurements, you are the automation, and you have to be holding a phone.
+What the app does not do is automate. It shows values and lets you change a setpoint
+by hand. There are no automations, no schedules, no conditions, and no integration
+with anything else. If the flat is going to react to its own measurements, you are the
+one reacting, and you need a phone in your hand to do it.
 
-There is no history either. The dashboard is a live view: it tells you CO2 is 1400 ppm
-right now, but not what it was at 3 a.m. last Tuesday. Every long-term question — did
-raising the ventilation setpoint actually help, what does the boiler cost per month,
-is the flat drifting warmer — is unanswerable, because nothing keeps the record.
+History exists, but only in coarse form. The app reports consumption per month, which
+answers a billing question and little else. Nothing keeps the fine detail, so you
+cannot ask what the CO2 did at 3 a.m. last Tuesday, or whether raising the ventilation
+setpoint changed anything that week.
 
-So this bridge does the boring part: log in, discover what the account can see, poll
-it on a sane interval, publish it as MQTT with Home Assistant discovery. Past that
-point the data is ordinary. It gets recorded like any other sensor, energy meters land
-in the Energy dashboard, and CO2 or boiler state can trigger automations the vendor
-never offered — including ones that act on hardware Nexuri knows nothing about.
+So the bridge does the plumbing: log in, discover what the account can see, poll on a
+sane interval, publish to MQTT with Home Assistant discovery. After that the data
+behaves like any other sensor. It is recorded at full resolution, energy meters land in
+the Energy dashboard, and CO2 or boiler state can drive automations, including ones
+that act on hardware Nexuri knows nothing about.
 
-Mixing sources is the real payoff. In my flat three BLE thermometers already report
-per-room temperature to the same Home Assistant; Nexuri contributes one environmental
+Mixing sources is the real payoff. In my flat three BLE thermometers report per-room
+temperature to the same Home Assistant, while Nexuri contributes the environmental
 sensor, CO2, and the boiler and ventilation state. Separately each half is a partial
-picture. On one broker they are a single system, and a decision can finally use all of
-it at once — vent on CO2 while watching what it does to the coldest room, rather than
-trusting a number from a dashboard that only speaks for the hallway.
+picture. On one broker they are one system, so a decision can use all of it: ventilate
+on CO2 while watching what that does to the coldest room, instead of trusting one
+sensor in the hallway.
 
-The bridge is written to be flat-agnostic on purpose. Discovery keys off device
-*types*, not the IDs in one particular apartment, so a neighbour with the same
-hardware runs the same container with their own credentials and nothing else to
-configure.
+Discovery keys off device types rather than the IDs in one particular apartment, so a
+neighbour with the same hardware runs the same container with their own credentials
+and nothing else to configure.
 
 ## Status
 
