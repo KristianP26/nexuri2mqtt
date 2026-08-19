@@ -56,7 +56,9 @@ TOPICS: dict[str, TopicMeta] = {
     # Heat recovery ventilation
     "av_stp": TopicMeta("Airflow setpoint", "m³/h", None),
     "av_rat": TopicMeta("Airflow", "m³/h", None),
-    "av_blp": TopicMeta("Blade position", "%", None),
+    # Precepts give the unit but no multiplier, and the raw value is ~1157 for
+    # what the dampers report as roughly 12 %. Inferred, not confirmed.
+    "av_blp": TopicMeta("Blade position", "%", None, multiplier=0.01, precision=1),
     # Raw on purpose: only the "running" value (0) is confirmed, and guessing
     # the polarity of a switch that silently stops ventilation is not worth it.
     "av_mod": TopicMeta("Mode (raw)", None, None, None, diagnostic=True),
@@ -179,7 +181,11 @@ def devices_from_widget(widget: dict, include_shared: bool = False) -> list[Devi
         return []
 
     precept_topics, units, multipliers = _precept_topics(widget.get("precepts") or {})
-    topics = precept_topics or TYPE_TOPICS.get(widget_type, [])
+    # Merge, do not choose. Precepts are frequently partial: the air preheater
+    # advertises a unit for hr_stp and says nothing about hr_ena or hr_hst, so
+    # trusting precepts alone would silently drop two thirds of the device.
+    fallback = TYPE_TOPICS.get(widget_type, [])
+    topics = list(dict.fromkeys([*fallback, *precept_topics]))
     if not topics:
         return []
 

@@ -143,6 +143,15 @@ class Bridge:
         if known - found:
             log.info("%d device(s) disappeared from the account", len(known - found))
 
+        # Drop cached topic sets for devices that vanished, and un-park the ones
+        # that answered nothing last time so a temporarily dead component gets
+        # another chance once per rediscovery interval.
+        self._accepted = {
+            component: topics
+            for component, topics in self._accepted.items()
+            if topics and component in found
+        }
+
         self._devices = devices
         log.info("tracking %d device(s) from %d widget(s)", len(devices), len(widgets))
 
@@ -154,6 +163,11 @@ class Bridge:
                 return
 
             topics = self._accepted.get(device.component_id)
+            if topics == []:
+                # Probed before and answered nothing. Retried on rediscovery,
+                # not every minute: each attempt reaches hardware in the flat.
+                continue
+
             try:
                 if topics is None:
                     values, topics = self._client.read_probing(
@@ -162,7 +176,9 @@ class Bridge:
                     self._accepted[device.component_id] = topics
                     if not topics:
                         log.warning(
-                            "%s accepted none of its topics; skipping", device.name
+                            "%s accepted none of its topics; parking it until "
+                            "the next rediscovery",
+                            device.name,
                         )
                         continue
                 else:
@@ -175,6 +191,10 @@ class Bridge:
                 # One dead device must not stop the others. The boiler-room bin
                 # sensor being offline is not a reason to lose the whole flat.
                 log.warning("read failed for %s: %s", device.name, exc)
+                if self._accepted.get(device.component_id) is None:
+                    # Failed during the initial probe: park it rather than
+                    # re-probing a component that does not answer.
+                    self._accepted[device.component_id] = []
                 continue
             except Exception as exc:  # noqa: BLE001 - keep the loop alive
                 log.warning("unexpected error reading %s: %s", device.name, exc)
