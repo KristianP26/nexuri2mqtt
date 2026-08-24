@@ -89,7 +89,7 @@ Discovered automatically. Types with a curated topic map:
 | `AIR_VALVE_TROX` | Heat recovery ventilation | airflow setpoint, actual rate, on/off |
 | `BLINDS` | Blinds | open/close state |
 | `SWITCH` | Switch / direct heater | on/off |
-| `DOOR`, `TENANT_DOOR`, `MAIN_DOOR`, `SPECIAL_DOOR`, `GARAGE` | Doors | open/closed |
+| `DOOR`, `TENANT_DOOR`, `MAIN_DOOR`, `SPECIAL_DOOR`, `GARAGE` | Doors | lock released/held |
 
 Anything else is still discovered. Its topics are read if the API advertises them,
 and published as raw diagnostic entities.

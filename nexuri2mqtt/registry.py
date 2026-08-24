@@ -67,8 +67,12 @@ TOPICS: dict[str, TopicMeta] = {
     "ag_cst": TopicMeta("Closing", None, None, None, diagnostic=True, binary=True),
     # Switch
     "sw_sst": TopicMeta("State", None, "power", None, binary=True),
-    # Doors
-    "dr_dst": TopicMeta("Door", None, "door", None, binary=True),
+    # Doors. Not a contact sensor: dr_dst goes to 1 only while the electric
+    # strike is released, which happens when a card is presented outside. A door
+    # left standing open reads 0. Hence device_class "lock" (on = unlocked)
+    # rather than "door" (on = open), which claimed the opposite of the truth
+    # for most of the day.
+    "dr_dst": TopicMeta("Door lock", None, "lock", None, binary=True),
 }
 
 # The API advertises multiplication 0.001 for p1_pwr with unit "W", which turns a
